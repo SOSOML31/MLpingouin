@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penguin Detector</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="icon.png">
+</head>
+<body>
+    <header>
+        <h1>🐧 Penguin Race Detecteur V1<br/><br/><br/><a href="donner.html" >💻 </a></h1>
+    </header>
+
+    <main>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <label for="mode">Choisir le type d'entrée :</label>
+            <select id="mode" name="mode">
+                <option value="photo">📷 Photo</option>
+                <option value="data">📊 Données</option>
+            </select>
+
+            <div id="photo-section">
+                <label for="image">Télécharger une image :</label>
+                <input type="file" id="image" name="file" accept="image/*">
+            </div>
+
+            <div id="data-section" style="display: none;">
+                <label for="size">Taille (cm) :</label>
+                <input type="number" id="size" name="size" placeholder="Entrez la taille en cm">
+
+                <label for="weight">Poids (kg) :</label>
+                <input type="number" id="weight" name="weight" placeholder="Entrez le poids en kg">
+
+                <label for="beak_length">Longueur du bec (cm) :</label>
+                <input type="number" id="beak_length" name="beak_length" placeholder="Entrez la longueur du bec en cm">
+            </div>
+
+            <button type="submit">Envoyer</button>
+        </form>
+    </main>
+<br/>
+    <footer>
+        <p id="result"></p>
+    </footer>
+
+    <script>
+        const modeSelector = document.getElementById("mode");
+        const photoSection = document.getElementById("photo-section");
+        const dataSection = document.getElementById("data-section");
+        const form = document.getElementById("uploadForm");
+        const result = document.getElementById("result");
+
+        modeSelector.addEventListener("change", () => {
+            if (modeSelector.value === "photo") {
+                photoSection.style.display = "block";
+                dataSection.style.display = "none";
+            } else {
+                photoSection.style.display = "none";
+                dataSection.style.display = "block";
+            }
+        });
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData();
+            if (modeSelector.value === "photo") {
+                const file = document.getElementById("image").files[0];
+                if (!file) {
+                    result.textContent = "❌ Choisissez une photo.";
+                    result.className = "error";
+                    return;
+                }
+                formData.append("file", file);
+            } else {
+                const size = document.getElementById("size").value;
+                const weight = document.getElementById("weight").value;
+                const beakLength = document.getElementById("beak_length").value;
+
+                if (!size || !weight || !beakLength) {
+                    result.textContent = "❌ Remplissez correctement toutes les données.";
+                    result.className = "error";
+                    return;
+                }
+                formData.append("size", size);
+                formData.append("weight", weight);
+                formData.append("beak_length", beakLength);
+            }
+
+            result.textContent = "Chargement et traitement en cours...";
+            result.className = "";
+
+            try {
+                const response = await fetch("http://127.0.0.1:5000/predict", {
+                    method: "POST",
+                    body: formData,
+                });
+                const data = await response.json();
+                console.log(data); // Debug : vérifier la réponse de l'API
+
+                if (data.error) {
+                    result.textContent = "❌ Erreur : " + data.error;
+                    result.className = "error";
+                } else if (data.result) {
+                    result.textContent = data.result;
+                    result.className = "success";
+                } else {
+                    result.textContent = "❌ Réponse inattendue du serveur.";
+                    result.className = "error";
+                }
+            } catch (error) {
+                result.textContent = "❌ Une erreur s'est produite : " + error.message;
+                result.className = "error";
+            }
+        });
+    </script>
+</body>
+</html>

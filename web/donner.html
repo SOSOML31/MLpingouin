@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penguin Données</title>
+    <link rel="stylesheet" href="styledonner.css">
+    <link rel="icon" type="image/png" href="icon.png">
+</head>
+<body>
+    <header>
+        <h1>📊 Résultats des Prédictions</h1>
+    </header>
+    <main>
+        <div id="data-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom de l'image</th>
+                        <th>Résultat</th>
+                    </tr>
+                </thead>
+                <tbody id="data-table-body">
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        async function fetchPredictions() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/results');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                const tableBody = document.getElementById('data-table-body');
+
+                data.forEach((row) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${row.id}</td>
+                        <td>${row.image_name || "N/A"}</td>
+                        <td>${row.result}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Erreur lors du chargement des données :', error);
+                const container = document.getElementById('data-container');
+                container.innerHTML = `<p class="error">Erreur lors du chargement des données.</p>`;
+            }
+        }
+        document.addEventListener('DOMContentLoaded', fetchPredictions);
+    </script>
+</body>
+</html>
